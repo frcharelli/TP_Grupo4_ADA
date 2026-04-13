@@ -1,0 +1,195 @@
+Ejercicio 1:
+
+inventory-service/src/main/java/com/uade/inventory/infrastructure/adapter/in/web/InventoryController.java
+
+Pegá este método dentro de la clase:
+
+@GetMapping("/version")
+public ResponseEntity<String> getVersion() {
+    return ResponseEntity.ok("v1.0.0");
+}
+
+--------------------------------------------------------------------------
+
+Ejercicio 2:
+
+inventory-service/src/main/java/com/uade/inventory/infrastructure/adapter/in/web/InventoryController.java
+
+Reemplazá el método getAllProducts() por este:
+
+@GetMapping("/products")
+public ResponseEntity<List<Product>> getAllProducts() {
+    return ResponseEntity.ok()
+            .header("X-Service-Name", "inventory-service")
+            .body(productUseCase.getAllProducts());
+}
+
+--------------------------------------------------------------------------
+
+Ejercicio 3:
+
+inventory-service/src/main/java/com/uade/inventory/infrastructure/config/DataInitializer.java
+
+Reemplazá el bloque del if por este:
+
+if (productRepositoryPort.count() == 0) {
+    productRepositoryPort.save(new Product("Laptop", 10, 999.99));
+    productRepositoryPort.save(new Product("Mouse", 50, 29.99));
+    productRepositoryPort.save(new Product("Teclado", 30, 79.99));
+    productRepositoryPort.save(new Product("Monitor", 15, 349.99));
+    productRepositoryPort.save(new Product("Auriculares", 25, 59.99));
+}
+
+--------------------------------------------------------------------------
+
+Ejercicio 4:
+
+config-server/config/inventory-service.yml
+
+Pegá esto al final:
+
+app:
+  max-items-per-page: 20
+
+Después creá este archivo nuevo:
+inventory-service/src/main/java/com/uade/inventory/infrastructure/config/AppConfigLogger.java
+
+package com.uade.inventory.infrastructure.config;
+
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AppConfigLogger {
+
+    private static final Logger log = LoggerFactory.getLogger(AppConfigLogger.class);
+
+    @Value("${app.max-items-per-page}")
+    private int maxItemsPerPage;
+
+    @PostConstruct
+    public void printConfig() {
+        log.info("Max items per page: {}", maxItemsPerPage);
+    }
+}
+
+--------------------------------------------------------------------------
+
+Ejercicio 5:
+
+inventory-service/src/main/java/com/uade/inventory/domain/model/Product.java
+
+Reemplazá todo el archivo por este:
+
+package com.uade.inventory.domain.model;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
+import java.util.Objects;
+
+public class Product {
+
+    private Long id;
+
+    @NotBlank
+    private String name;
+
+    @Min(0)
+    private Integer quantity;
+
+    @Positive
+    private Double price;
+
+    public Product() {
+    }
+
+    public Product(String name, Integer quantity, Double price) {
+        this.name = name;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public Product(Long id, String name, Integer quantity, Double price) {
+        this.id = id;
+        this.name = name;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(id, product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+----------
+
+inventory-service/src/main/java/com/uade/inventory/infrastructure/adapter/in/web/InventoryController.java
+
+Agregá este import arriba:
+
+import jakarta.validation.Valid;
+
+Reemplazá el método createProduct() por este:
+
+@PostMapping("/products")
+public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
+    return ResponseEntity.ok(productUseCase.createProduct(product));
+}
+
+--------------------------------------------------------------------------
+
+Ejercicio 6:
+
+config-server/config/auth-service.yml
+
+Pegá esto o dejalo así si ya existe:
+
+jwt:
+  secret: MiClaveSecretaParaJWT_MuyLarga_Y_Segura_123456789
+  expiration-ms: 1800000
